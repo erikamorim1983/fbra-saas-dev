@@ -26,6 +26,15 @@ export default function Header() {
                         <ChevronRight className="h-4 w-4" />
                     </Link>
                 </nav>
+
+                {/* Botão mobile */}
+                <Link
+                    href="/auth/login"
+                    className="md:hidden px-4 py-2 bg-accent hover:bg-accent-light text-primary font-bold rounded-full transition-all hover:scale-105 active:scale-95 flex items-center gap-1 text-sm"
+                >
+                    Acessar Plataforma
+                    <ChevronRight className="h-4 w-4" />
+                </Link>
             </div>
         </header>
     );

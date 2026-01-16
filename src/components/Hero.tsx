@@ -38,9 +38,10 @@ export default function Hero() {
                         </Link>
                         <Link
                             href="/auth/login"
-                            className="w-full sm:w-auto px-8 py-4 glass hover:bg-white/10 text-white font-semibold rounded-xl transition-all"
+                            className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-primary/20 hover:border-accent text-primary font-bold rounded-xl transition-all hover:translate-y-[-2px] shadow-lg flex items-center justify-center gap-2"
                         >
-                            Falar com um Especialista
+                            Acessar Plataforma
+                            <ArrowRight className="h-5 w-5" />
                         </Link>
                     </div>
 
