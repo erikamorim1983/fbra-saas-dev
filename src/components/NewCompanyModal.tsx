@@ -12,7 +12,7 @@ import {
     RefreshCcw,
     Sparkles
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 interface NewCompanyModalProps {
     groupId: string;
@@ -21,6 +21,7 @@ interface NewCompanyModalProps {
 }
 
 export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewCompanyModalProps) {
+    const supabase = createClient();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -35,24 +36,34 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
         setLoading(true);
 
         try {
-            const { error } = await supabase
-                .from('companies')
-                .insert([
-                    {
-                        group_id: groupId,
-                        name: formData.name,
-                        cnpj: formData.cnpj,
-                        segment: formData.segment,
-                        current_regime: formData.current_regime,
-                        iss_rate: formData.iss_rate
-                    }
-                ]);
+            console.log('📝 Tentando criar empresa:', formData);
+            console.log('📝 Group ID:', groupId);
 
-            if (error) throw error;
+            const { data, error } = await supabase
+                .from('companies')
+                .insert({
+                    group_id: groupId,
+                    name: formData.name,
+                    cnpj: formData.cnpj,
+                    segment: formData.segment,
+                    current_regime: formData.current_regime,
+                    iss_rate: formData.iss_rate
+                } as any)
+                .select();
+
+            if (error) {
+                console.error('❌ Erro Supabase:', error);
+                console.error('❌ Código:', error.code);
+                console.error('❌ Mensagem:', error.message);
+                console.error('❌ Detalhes:', error.details);
+                throw error;
+            }
+
+            console.log('✅ Empresa criada:', data);
             onSuccess();
         } catch (error: any) {
             console.error('Error creating company:', error);
-            alert('Erro ao cadastrar empresa: ' + error.message);
+            alert('Erro ao cadastrar empresa: ' + (error.message || 'Verifique o console para mais detalhes.'));
         } finally {
             setLoading(false);
         }

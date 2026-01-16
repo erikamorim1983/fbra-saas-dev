@@ -13,9 +13,10 @@ import {
     RefreshCcw
 } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export default function GroupsPage() {
+    const supabase = createClient();
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 

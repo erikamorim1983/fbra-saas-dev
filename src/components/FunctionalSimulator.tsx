@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { HelpCircle, Info, Calculator, Sparkles, FileText, Download, RefreshCcw, Plus, Trash2, Upload, FileDown } from 'lucide-react';
 import { TaxEngine, TaxAnalisysInput } from '@/lib/taxEngine';
 import * as XLSX from 'xlsx';
@@ -14,11 +14,12 @@ interface DREField {
 }
 
 import { useParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 export default function FunctionalSimulator() {
+    const supabase = createClient();
     const { companyId } = useParams();
     const [structure, setStructure] = useState<DREField[]>([
         { id: 'revenue', label: '01 - (+) Receita Bruta (Sales)', isHeader: true },
@@ -96,7 +97,90 @@ export default function FunctionalSimulator() {
     const [isClearing, setIsClearing] = useState(false);
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [newAccountName, setNewAccountName] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [companyName, setCompanyName] = useState('Empresa');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Carregar dados salvos do Supabase quando a página abrir
+    useEffect(() => {
+        const loadSavedData = async () => {
+            if (!companyId) {
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                console.log('📂 Carregando dados salvos para empresa:', companyId);
+
+                // Buscar nome da empresa
+                const { data: companyData } = await supabase
+                    .from('companies')
+                    .select('name')
+                    .eq('id', companyId)
+                    .single();
+
+                if (companyData?.name) {
+                    setCompanyName(companyData.name);
+                }
+
+                // Buscar dados financeiros
+                const { data, error } = await supabase
+                    .from('monthly_financials')
+                    .select('*')
+                    .eq('company_id', companyId)
+                    .eq('year', 2024)
+                    .order('month', { ascending: true });
+
+                if (error) {
+                    console.error('❌ Erro ao carregar dados:', error);
+                    setIsLoading(false);
+                    return;
+                }
+
+                if (data && data.length > 0) {
+                    console.log('📂 Dados encontrados:', data.length, 'meses');
+
+                    // Converter dados do banco para o formato do componente
+                    const newValues: Record<string, number[]> = { ...values };
+
+                    // Inicializar arrays
+                    Object.keys(newValues).forEach(key => {
+                        newValues[key] = Array(12).fill(0);
+                    });
+
+                    // Preencher com dados do banco
+                    data.forEach((record: any) => {
+                        const monthIdx = record.month - 1; // Converter 1-12 para 0-11
+
+                        // Mapear campos do banco para campos do componente
+                        if (newValues['services']) newValues['services'][monthIdx] = record.revenue_services || 0;
+                        if (newValues['rev_breach']) newValues['rev_breach'][monthIdx] = record.revenue_products * 0.5 || 0;
+                        if (newValues['rev_punctual']) newValues['rev_punctual'][monthIdx] = record.revenue_products * 0.5 || 0;
+                        if (newValues['personnel_cogs']) newValues['personnel_cogs'][monthIdx] = record.costs_personnel * 0.5 || 0;
+                        if (newValues['personnel_opex']) newValues['personnel_opex'][monthIdx] = record.costs_personnel * 0.5 || 0;
+                        if (newValues['costs_hosting']) newValues['costs_hosting'][monthIdx] = record.costs_inputs * 0.5 || 0;
+                        if (newValues['costs_payments']) newValues['costs_payments'][monthIdx] = record.costs_inputs * 0.5 || 0;
+                        if (newValues['costs_third_party']) newValues['costs_third_party'][monthIdx] = record.costs_energy || 0;
+                        if (newValues['costs_marketing_clients']) newValues['costs_marketing_clients'][monthIdx] = record.costs_rent * 0.5 || 0;
+                        if (newValues['costs_travel']) newValues['costs_travel'][monthIdx] = record.costs_rent * 0.5 || 0;
+                        if (newValues['marketing']) newValues['marketing'][monthIdx] = record.opex_marketing || 0;
+                        if (newValues['admin']) newValues['admin'][monthIdx] = record.opex_admin || 0;
+                    });
+
+                    setValues(newValues);
+                    showNotify('Dados carregados do histórico!', 'info');
+                } else {
+                    console.log('📂 Nenhum dado salvo encontrado para esta empresa.');
+                }
+            } catch (err) {
+                console.error('❌ Erro ao carregar dados:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadSavedData();
+    }, [companyId]);
 
     const showNotify = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
         setNotification({ message, type });
@@ -166,6 +250,28 @@ export default function FunctionalSimulator() {
             setAnalyzing(false);
             setShowResults(true);
         }, 1500);
+    };
+
+    const handleGeneratePDF = async () => {
+        // Importar dinamicamente para evitar erros de SSR
+        const { generateParecerPDF } = await import('@/lib/pdfGenerator');
+
+        const nomeEmpresa = companyName || 'FBRA_Tecnologia';
+        console.log('📄 Gerando PDF para empresa:', nomeEmpresa);
+
+        generateParecerPDF({
+            companyName: nomeEmpresa,
+            consultorName: 'Consultor FBRA',
+            date: new Date().toLocaleDateString('pt-BR'),
+            receitaBruta: calcs.rb,
+            receitaLiquida: calcs.rl,
+            ebitda: calcs.ebitda,
+            analysis: calcs.analysis,
+            bestRegime: calcs.best,
+            savings: calcs.savings
+        });
+
+        showNotify('Parecer PDF gerado com sucesso!', 'success');
     };
 
     const confirmAddAccount = () => {
@@ -261,11 +367,14 @@ export default function FunctionalSimulator() {
     };
 
     const saveToSupabase = async () => {
-        if (!companyId) return;
+        // Obter companyId direto dos parâmetros da URL de forma segura
+        const resolvedCompanyId = companyId as string;
 
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(companyId as string)) {
-            showNotify('ID da empresa inválido para salvamento (use uma empresa real do dashboard).', 'info');
+        console.log('📊 Tentando salvar dados...');
+        console.log('📊 Company ID detectado:', resolvedCompanyId);
+
+        if (!resolvedCompanyId) {
+            showNotify('Erro: ID da empresa não detectado na URL.', 'error');
             return;
         }
 
@@ -276,7 +385,7 @@ export default function FunctionalSimulator() {
             const monthRecords = months.map((_, idx) => {
                 const v = (id: string) => (values[id] || Array(12).fill(0))[idx];
                 return {
-                    company_id: companyId as string,
+                    company_id: resolvedCompanyId,
                     month: idx + 1, // 1 a 12 para satisfazer a constraint do banco
                     year: 2024,
                     revenue_services: v('services') + v('partners') + v('rev_events'),
@@ -286,24 +395,31 @@ export default function FunctionalSimulator() {
                     costs_energy: v('costs_third_party'),
                     costs_rent: v('costs_marketing_clients') + v('costs_travel'),
                     opex_marketing: v('marketing'),
-                    opex_admin: v('admin') + v('infra_tech') + v('installations'), // admin consolidado
+                    opex_admin: v('admin') + v('infra_tech') + v('installations'),
                 };
             });
 
-            const { error: dbError } = await supabase
+            console.log('📊 Dados a serem salvos:', monthRecords[0]); // Log do primeiro mês como exemplo
+
+            const { data, error: dbError } = await supabase
                 .from('monthly_financials')
                 .upsert(monthRecords as any, {
                     onConflict: 'company_id,month,year'
-                });
+                })
+                .select();
 
             if (dbError) {
-                console.error('Erro Detalhado Supabase:', dbError);
+                console.error('❌ Erro Supabase:', dbError);
+                console.error('❌ Código do erro:', dbError.code);
+                console.error('❌ Mensagem:', dbError.message);
+                console.error('❌ Detalhes:', dbError.details);
                 throw new Error(dbError.message || 'Falha na comunicação com o banco');
             }
 
+            console.log('✅ Dados salvos com sucesso:', data);
             showNotify('Os 12 meses foram salvos com sucesso no banco de dados!', 'success');
         } catch (error: any) {
-            console.error('Exceção ao salvar:', error);
+            console.error('❌ Exceção ao salvar:', error);
             showNotify(`Erro ao salvar: ${error.message || 'Tente novamente.'}`, 'error');
         } finally {
             setAnalyzing(false);
@@ -614,7 +730,7 @@ export default function FunctionalSimulator() {
                             <div className="bg-green-50 border border-green-100 p-5 rounded-2xl shadow-sm">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-green-600 mb-1">Economia Máxima</p>
                                 <p className="text-3xl font-bold text-green-600">R$ {calcs.savings.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} <span className="text-sm font-normal">/mês</span></p>
-                                <button onClick={() => window.print()} className="w-full mt-4 py-3 bg-green-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
+                                <button onClick={handleGeneratePDF} className="w-full mt-4 py-3 bg-green-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
                                     <FileDown className="h-4 w-4" />
                                     Gerar Parecer PDF
                                 </button>

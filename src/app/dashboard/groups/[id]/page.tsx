@@ -11,11 +11,12 @@ import {
     RefreshCcw,
 } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useParams } from 'next/navigation';
 import NewCompanyModal from '@/components/NewCompanyModal';
 
 export default function GroupDetailsPage() {
+    const supabase = createClient();
     const { id } = useParams();
     const [group, setGroup] = useState<any>(null);
     const [companies, setCompanies] = useState<any[]>([]);
