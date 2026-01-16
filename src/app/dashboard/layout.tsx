@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import {
     LayoutDashboard,
@@ -10,7 +11,10 @@ import {
     LogOut,
     Calculator,
     FileText,
-    Users
+    Users,
+    ChevronLeft,
+    ChevronRight,
+    Menu
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 
@@ -30,6 +34,7 @@ export default function DashboardLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
+    const [isExpanded, setIsExpanded] = useState(true);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -54,67 +59,87 @@ export default function DashboardLayout({
     return (
         <div className="flex h-screen bg-slate-50 text-primary overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm">
-                <div className="p-8">
+            <aside className={`${isExpanded ? 'w-64' : 'w-20'} bg-white border-r border-slate-200 flex flex-col shadow-sm transition-all duration-300 relative`}>
+                {/* Toggle Button */}
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="absolute -right-3 top-24 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50"
+                >
+                    {isExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </button>
+
+                {/* Logo */}
+                <div className={`p-4 ${isExpanded ? 'px-6' : 'px-2'} flex items-center justify-center`}>
                     <Link href="/dashboard" className="flex items-center gap-2">
-                        <span className="text-xl font-bold tracking-tight text-primary">
-                            FBRA<span className="text-accent underline decoration-2 decoration-accent/20 underline-offset-4">SaaS</span>
-                        </span>
+                        {isExpanded ? (
+                            <div className="flex items-center gap-2">
+                                <Image src="/logo.png" alt="FBRA Consulting" width={40} height={40} className="rounded-lg" />
+                                <div className="flex flex-col">
+                                    <span className="text-lg font-bold tracking-tight text-primary leading-tight">FBRA</span>
+                                    <span className="text-[10px] font-medium text-primary/50 uppercase tracking-widest">Consulting</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <Image src="/logo.png" alt="FBRA" width={40} height={40} className="rounded-lg" />
+                        )}
                     </Link>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-1">
+                <nav className="flex-1 px-3 space-y-1 mt-4">
                     {menuItems.map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
+                                title={item.label}
+                                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive
                                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                     : 'text-primary/60 hover:text-primary hover:bg-slate-50'
-                                    }`}
+                                    } ${!isExpanded ? 'justify-center' : ''}`}
                             >
-                                <item.icon className={`h-5 w-5 ${isActive ? '' : 'group-hover:scale-110'} transition-transform`} />
-                                <span className="text-sm font-semibold">{item.label}</span>
+                                <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? '' : 'group-hover:scale-110'} transition-transform`} />
+                                {isExpanded && <span className="text-sm font-semibold truncate">{item.label}</span>}
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-100 space-y-1">
+                <div className="p-3 border-t border-slate-100 space-y-1">
                     <Link
                         href="/dashboard/settings"
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === '/dashboard/settings'
+                        title="Configurações"
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${pathname === '/dashboard/settings'
                             ? 'bg-primary text-white shadow-lg shadow-primary/20'
                             : 'text-primary/60 hover:text-primary hover:bg-slate-50'
-                            }`}
+                            } ${!isExpanded ? 'justify-center' : ''}`}
                     >
-                        <Settings className="h-5 w-5" />
-                        <span className="text-sm font-semibold">Configurações</span>
+                        <Settings className="h-5 w-5 flex-shrink-0" />
+                        {isExpanded && <span className="text-sm font-semibold">Configurações</span>}
                     </Link>
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 transition-all text-primary/60 hover:text-red-600 cursor-pointer"
+                        title="Sair"
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-50 transition-all text-primary/60 hover:text-red-600 cursor-pointer ${!isExpanded ? 'justify-center' : ''}`}
                     >
-                        <LogOut className="h-5 w-5" />
-                        <span className="text-sm font-semibold">Sair</span>
+                        <LogOut className="h-5 w-5 flex-shrink-0" />
+                        {isExpanded && <span className="text-sm font-semibold">Sair</span>}
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto bg-slate-50">
-                <header className="h-20 border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 bg-white/80 backdrop-blur-xl z-20">
+                <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 bg-white/80 backdrop-blur-xl z-20">
                     <div>
                         <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/30">Dashboard</h2>
-                        <p className="text-xl font-bold text-primary">Bem-vindo, Consultor FBRA</p>
+                        <p className="text-lg font-bold text-primary">Bem-vindo, Consultor FBRA</p>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-end mr-2">
-                            <span className="text-xs font-bold text-primary truncate max-w-[150px]">
-                                {user?.email?.split('@')[0] || 'Fernando Brasil'}
+                    <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end">
+                            <span className="text-xs font-bold text-primary truncate max-w-[120px]">
+                                {user?.email?.split('@')[0] || 'Consultor'}
                             </span>
                             <span className="text-[10px] text-primary/40 uppercase font-bold tracking-tight">Consultor Sênior</span>
                         </div>
@@ -124,7 +149,7 @@ export default function DashboardLayout({
                     </div>
                 </header>
 
-                <div className="p-10">
+                <div className="p-6">
                     {children}
                 </div>
             </main>
