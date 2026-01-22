@@ -40,7 +40,7 @@ export default function SignUpPage() {
             if (data.session) {
                 showNotify('success', 'Conta criada com sucesso! Acessando...');
                 setTimeout(() => {
-                    router.push('/dashboard/simulator');
+                    router.push('/portal/simulator');
                     router.refresh();
                 }, 1500);
             } else {
@@ -82,12 +82,10 @@ export default function SignUpPage() {
                 </Link>
 
                 <div className="glass p-10 rounded-3xl border-white/10 shadow-2xl">
-                    <div className="flex flex-col items-center mb-10">
-                        <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-accent/20">
-                            <Shield className="text-primary h-8 w-8" />
-                        </div>
-                        <h1 className="text-3xl font-bold text-center">Criar <span className="text-accent underline decoration-2 underline-offset-4">Conta</span></h1>
-                        <p className="text-slate-500 text-sm mt-2 text-center">Junte-se à plataforma de inteligência tributária da FBRA</p>
+                    <div className="flex flex-col items-center mb-10 text-primary">
+                        <img src="/logo_n0t4x.png" alt="N0T4X" className="h-16 w-auto mb-6" />
+                        <h1 className="text-3xl font-black text-center text-primary">Criar <span className="text-accent underline decoration-2 underline-offset-4">Conta</span></h1>
+                        <p className="text-slate-500 text-sm mt-2 text-center">Junte-se à plataforma de inteligência tributária da N0T4X</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -115,7 +113,7 @@ export default function SignUpPage() {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="exemplo@fbra.com.br"
+                                    placeholder="exemplo@n0t4x.com.br"
                                     className="w-full bg-white/10 border border-[#0F172A]/10 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent focus:bg-white/20 transition-all text-[#0F172A] font-semibold placeholder:text-[#0F172A]/30"
                                     required
                                     disabled={loading}

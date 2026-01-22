@@ -39,9 +39,9 @@ const regimeNames: Record<string, string> = {
 const formatCurrency = (value: number) =>
     `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-// Cores da marca FBRA
+// Cores da marca N0T4X
 const primaryColor: [number, number, number] = [15, 23, 42]; // Slate-900
-const accentColor: [number, number, number] = [234, 179, 8]; // Amarelo FBRA
+const accentColor: [number, number, number] = [234, 179, 8]; // Amarelo N0T4X
 const grayColor: [number, number, number] = [100, 116, 139]; // Slate-500
 
 function addHeader(doc: jsPDF, data: ParecerData, pageNum: number, totalPages: number) {
@@ -54,7 +54,7 @@ function addHeader(doc: jsPDF, data: ParecerData, pageNum: number, totalPages: n
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('FBRA Consulting', margin, 20);
+    doc.text('N0T4X', margin, 20);
 
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
@@ -75,7 +75,7 @@ function addFooter(doc: jsPDF) {
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(7);
-    doc.text('FBRA Consulting | Planejamento Tributário Estratégico', margin, pageHeight - 6);
+    doc.text('N0T4X | Planejamento Tributário Estratégico', margin, pageHeight - 6);
     doc.text('Documento confidencial - Uso exclusivo do cliente', pageWidth - margin - 65, pageHeight - 6);
 }
 
@@ -321,7 +321,7 @@ export function generateParecerPDF(data: ParecerData) {
     yPos += 4;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...grayColor);
-    doc.text('Consultor Tributário - FBRA Consulting', margin, yPos);
+    doc.text('Consultor Tributário - N0T4X', margin, yPos);
     yPos += 4;
     doc.text(`Data: ${data.date}`, margin, yPos);
 

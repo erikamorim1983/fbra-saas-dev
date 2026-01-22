@@ -1,5 +1,5 @@
 /**
- * FBRA Tax Engine - Brazilian Taxation Logic
+ * N0T4X Tax Engine - Brazilian Taxation Logic
  * Performs calculations for:
  * - Lucro Presumido
  * - Lucro Real (Cumulativo e Não-Cumulativo)

@@ -34,17 +34,45 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith('/auth/login') &&
-        !request.nextUrl.pathname.startsWith('/auth/auth-code-error') &&
-        request.nextUrl.pathname.startsWith('/dashboard')
-    ) {
-        // no user, potentially respond by redirecting the user to the login page
+    const isAuthPage = request.nextUrl.pathname.startsWith('/auth/login') || request.nextUrl.pathname.startsWith('/auth/auth-code-error');
+    const isAdminPath = request.nextUrl.pathname.startsWith('/admin');
+    const isPortalPath = request.nextUrl.pathname.startsWith('/portal');
+
+    if (user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('status, role')
+            .eq('id', user.id)
+            .single();
+
+        // 1. Blocked users can't access anything except login
+        if (profile?.status === 'blocked' && !isAuthPage) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/auth/login'
+            url.searchParams.set('error', 'Sua conta está suspensa. Entre em contato com o suporte.')
+            return NextResponse.redirect(url)
+        }
+
+        // 2. Role-based Access Control
+        // Clients can NEVER access /admin
+        if (profile?.role === 'client' && isAdminPath) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/portal' // Redirect clients back to their portal
+            return NextResponse.redirect(url)
+        }
+
+        // Admins and Consultants can access BOTH /admin and /portal (for testing)
+        // No restriction needed here for them.
+    }
+
+    if (!user && !isAuthPage && (isPortalPath || isAdminPath)) {
         const url = request.nextUrl.clone()
         url.pathname = '/auth/login'
+        // If they were trying to access admin, keep the admin type for the login screen
+        if (isAdminPath) url.searchParams.set('type', 'admin');
         return NextResponse.redirect(url)
     }
+
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're creating a
     // new response object with NextResponse.next() make sure to:

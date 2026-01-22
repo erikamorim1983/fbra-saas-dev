@@ -19,10 +19,8 @@ import {
 import { createClient } from '@/utils/supabase/client';
 
 const menuItems = [
-    { icon: LayoutDashboard, label: 'Início', href: '/dashboard' },
-    { icon: Users, label: 'Grupos de Empresas', href: '/dashboard/groups' },
-    { icon: Calculator, label: 'Simulador Tributário', href: '/dashboard/simulator' },
-    { icon: FileText, label: 'Pareceres Técnicos', href: '/dashboard/reports' },
+    { icon: LayoutDashboard, label: 'Início', href: '/admin', roles: ['admin', 'consultant'] },
+    { icon: Users, label: 'Meus Clientes', href: '/admin/clients', roles: ['admin', 'consultant'] },
 ];
 
 export default function DashboardLayout({
@@ -34,14 +32,24 @@ export default function DashboardLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
     const [isExpanded, setIsExpanded] = useState(true);
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchUserData = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
+
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                setProfile(profile);
+            }
         };
-        fetchUser();
+        fetchUserData();
     }, []);
 
     const handleLogout = async () => {
@@ -50,80 +58,77 @@ export default function DashboardLayout({
             console.error('Error logging out:', error.message);
             return;
         }
-        router.push('/auth/login');
+        router.push('/auth/login?type=admin');
         router.refresh();
     };
 
     const userInitials = user?.email?.substring(0, 2).toUpperCase() || '??';
+    const userRole = profile?.role || 'client';
 
     return (
         <div className="flex h-screen bg-slate-50 text-primary overflow-hidden">
             {/* Sidebar */}
-            <aside className={`${isExpanded ? 'w-64' : 'w-20'} bg-white border-r border-slate-200 flex flex-col shadow-sm transition-all duration-300 relative`}>
+            <aside className={`${isExpanded ? 'w-64' : 'w-20'} bg-primary border-r border-white/5 flex flex-col shadow-2xl transition-all duration-300 relative`}>
                 {/* Toggle Button */}
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="absolute -right-3 top-24 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50"
+                    className="absolute -right-3 top-24 w-6 h-6 bg-accent text-primary rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 border-2 border-primary"
                 >
-                    {isExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    {isExpanded ? <ChevronLeft className="h-3 w-3" strokeWidth={3} /> : <ChevronRight className="h-3 w-3" strokeWidth={3} />}
                 </button>
 
                 {/* Logo */}
-                <div className={`p-4 ${isExpanded ? 'px-6' : 'px-2'} flex items-center justify-center`}>
-                    <Link href="/dashboard" className="flex items-center gap-2">
+                <div className={`p-6 ${isExpanded ? 'px-6' : 'px-2'} flex items-center justify-center border-b border-white/5`}>
+                    <Link href="/admin" className="flex items-center gap-2">
                         {isExpanded ? (
-                            <div className="flex items-center gap-2">
-                                <Image src="/logo.png" alt="FBRA Consulting" width={40} height={40} className="rounded-lg" />
-                                <div className="flex flex-col">
-                                    <span className="text-lg font-bold tracking-tight text-primary leading-tight">FBRA</span>
-                                    <span className="text-[10px] font-medium text-primary/50 uppercase tracking-widest">Consulting</span>
-                                </div>
-                            </div>
+                            <img src="/logo_n0t4x.png" alt="N0T4X" className="h-10 w-auto" />
                         ) : (
-                            <Image src="/logo.png" alt="FBRA" width={40} height={40} className="rounded-lg" />
+                            <div className="w-10 h-10 relative overflow-hidden rounded-lg bg-white/5 border border-white/10 shadow-lg">
+                                <Image src="/logo_n0t4x.png" alt="N0T4X" fill className="object-contain" />
+                            </div>
                         )}
                     </Link>
                 </div>
 
-                <nav className="flex-1 px-3 space-y-1 mt-4">
-                    {menuItems.map((item) => {
-                        const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                <nav className="flex-1 px-3 space-y-1.5 mt-6">
+                    {menuItems.filter(item => item.roles.includes(userRole)).map((item) => {
+                        const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
                                 title={item.label}
-                                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                    : 'text-primary/60 hover:text-primary hover:bg-slate-50'
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
+                                    ? 'bg-accent text-primary shadow-lg shadow-accent/20'
+                                    : 'text-white/60 hover:text-white hover:bg-white/5'
                                     } ${!isExpanded ? 'justify-center' : ''}`}
                             >
                                 <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? '' : 'group-hover:scale-110'} transition-transform`} />
-                                {isExpanded && <span className="text-sm font-semibold truncate">{item.label}</span>}
+                                {isExpanded && <span className="text-sm font-bold truncate">{item.label}</span>}
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-3 border-t border-slate-100 space-y-1">
+                <div className="p-3 border-t border-white/5 space-y-1.5 mb-4">
                     <Link
-                        href="/dashboard/settings"
+                        href="/admin/settings"
                         title="Configurações"
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${pathname === '/dashboard/settings'
-                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                            : 'text-primary/60 hover:text-primary hover:bg-slate-50'
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === '/admin/settings'
+                            ? 'bg-accent text-primary shadow-lg shadow-accent/20'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
                             } ${!isExpanded ? 'justify-center' : ''}`}
                     >
                         <Settings className="h-5 w-5 flex-shrink-0" />
-                        {isExpanded && <span className="text-sm font-semibold">Configurações</span>}
+                        {isExpanded && <span className="text-sm font-bold">Configurações</span>}
                     </Link>
                     <button
                         onClick={handleLogout}
                         title="Sair"
-                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-50 transition-all text-primary/60 hover:text-red-600 cursor-pointer ${!isExpanded ? 'justify-center' : ''}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-rose-500/10 transition-all text-white/40 hover:text-rose-400 cursor-pointer ${!isExpanded ? 'justify-center' : ''}`}
                     >
                         <LogOut className="h-5 w-5 flex-shrink-0" />
-                        {isExpanded && <span className="text-sm font-semibold">Sair</span>}
+                        {isExpanded && <span className="text-sm font-bold">Sair</span>}
                     </button>
                 </div>
             </aside>
@@ -132,16 +137,16 @@ export default function DashboardLayout({
             <main className="flex-1 overflow-y-auto bg-slate-50">
                 <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 bg-white/80 backdrop-blur-xl z-20">
                     <div>
-                        <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/30">Dashboard</h2>
-                        <p className="text-lg font-bold text-primary">Bem-vindo, Consultor FBRA</p>
+                        <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/30">Portal Administrativo</h2>
+                        <p className="text-lg font-bold text-primary">Painel de Gestão Interna</p>
                     </div>
 
                     <div className="flex items-center gap-3">
                         <div className="flex flex-col items-end">
                             <span className="text-xs font-bold text-primary truncate max-w-[120px]">
-                                {user?.email?.split('@')[0] || 'Consultor'}
+                                {profile?.full_name || user?.email?.split('@')[0]}
                             </span>
-                            <span className="text-[10px] text-primary/40 uppercase font-bold tracking-tight">Consultor Sênior</span>
+                            <span className="text-[10px] text-primary/40 uppercase font-bold tracking-tight">Equipe N0T4X</span>
                         </div>
                         <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-accent font-bold shadow-lg shadow-primary/10">
                             {userInitials}

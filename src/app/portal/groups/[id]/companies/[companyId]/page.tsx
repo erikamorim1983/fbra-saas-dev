@@ -24,17 +24,17 @@ export default function CompanyDetailsPage() {
             {/* Breadcrumbs & Navigation */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/groups" className="p-2 glass rounded-lg hover:text-accent transition-colors">
+                    <Link href="/portal/groups" className="p-2 glass rounded-lg hover:text-accent transition-colors">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div>
                         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground/40">
-                            <Link href="/dashboard/groups" className="hover:text-foreground transition-colors">Grupos</Link>
+                            <Link href="/portal/groups" className="hover:text-foreground transition-colors">Grupos</Link>
                             <ChevronRight className="h-3 w-3" />
                             <span>Holding Nacional</span>
                         </div>
                         <h1 className="text-3xl font-bold flex items-center gap-3">
-                            FBRA Tecnologia S.A.
+                            N0T4X Tecnologia S.A.
                             <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] rounded-md border border-green-500/20">Ativa</span>
                         </h1>
                     </div>

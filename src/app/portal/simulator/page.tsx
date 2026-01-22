@@ -197,7 +197,7 @@ export default function SimulatorPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-bold text-accent">Parecer Técnico Estratégico</h3>
-                                    <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold">Gerado por IA FBRA-Tax Engine</p>
+                                    <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold">Gerado por IA N0T4X-Engine</p>
                                 </div>
                             </div>
 

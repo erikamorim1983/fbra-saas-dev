@@ -42,12 +42,14 @@ const services = [
 
 export default function Services() {
     return (
-        <section id="servicos" className="py-24 bg-primary-dark/30">
+        <section id="servicos" className="py-24 bg-primary relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-neon/5 rounded-full blur-[100px] -mr-48 -mt-48" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-[100px] -ml-48 -mb-48" />
             <div className="container mx-auto px-6">
                 <div className="text-center mb-16">
                     <span className="text-xs font-bold uppercase tracking-widest text-accent mb-4 block">Nossos Serviços</span>
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6">Soluções <span className="text-gradient">Corporativas</span></h2>
-                    <p className="text-foreground/60 max-w-2xl mx-auto text-lg">
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white text-shadow-glow">Soluções <span className="text-neon">Corporativas</span></h2>
+                    <p className="text-white/80 max-w-2xl mx-auto text-lg font-medium">
                         Abordagem integrada combinando expertise contábil e jurídica para máxima segurança e eficiência fiscal.
                     </p>
                 </div>
@@ -56,7 +58,7 @@ export default function Services() {
                     {services.map((service, index) => (
                         <div
                             key={index}
-                            className="glass p-8 rounded-2xl hover:bg-white/10 transition-all hover:translate-y-[-8px] border-t-2 border-transparent hover:border-accent group"
+                            className="bg-primary-dark/40 backdrop-blur-sm p-8 rounded-3xl hover:bg-primary-dark/60 transition-all hover:translate-y-[-8px] border border-white/5 hover:border-neon shadow-2xl group"
                         >
                             <div className="flex justify-between items-start mb-6">
                                 <div className="w-14 h-14 bg-accent/20 rounded-xl flex items-center justify-center group-hover:bg-accent transition-colors">
@@ -66,8 +68,8 @@ export default function Services() {
                                     {service.highlight}
                                 </span>
                             </div>
-                            <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                            <p className="text-foreground/60 leading-relaxed text-sm">
+                            <h3 className="text-xl font-bold mb-3 text-white">{service.title}</h3>
+                            <p className="text-white/60 leading-relaxed text-sm">
                                 {service.description}
                             </p>
                         </div>

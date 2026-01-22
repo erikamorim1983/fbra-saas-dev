@@ -80,7 +80,7 @@ export default function GroupDetailsPage() {
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div className="space-y-4">
-                    <Link href="/dashboard/groups" className="inline-flex items-center gap-2 text-primary/50 hover:text-accent font-medium transition-colors group">
+                    <Link href="/portal/groups" className="inline-flex items-center gap-2 text-primary/50 hover:text-accent font-medium transition-colors group">
                         <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                         Voltar para Grupos
                     </Link>
@@ -179,7 +179,7 @@ export default function GroupDetailsPage() {
                             </div>
 
                             <Link
-                                href={`/dashboard/groups/${id}/companies/${company.id}`}
+                                href={`/portal/groups/${id}/companies/${company.id}`}
                                 className="w-full py-4 bg-slate-50 hover:bg-primary hover:text-white text-center rounded-xl text-sm font-bold transition-all text-primary"
                             >
                                 Abrir Inteligência Fiscal

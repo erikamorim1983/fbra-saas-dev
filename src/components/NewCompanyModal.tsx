@@ -70,8 +70,8 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/20 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-primary w-full max-w-2xl rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden animate-in zoom-in-95 duration-300">
                 {/* Header */}
                 <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <div className="flex items-center gap-4">
@@ -79,8 +79,8 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
                             <Building2 className="h-6 w-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-primary">Nova Unidade</h2>
-                            <p className="text-xs text-primary/40 font-bold uppercase tracking-widest">Cadastro de CNPJ Coligado</p>
+                            <h2 className="text-2xl font-bold text-white">Nova Unidade</h2>
+                            <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Cadastro de CNPJ Coligado</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-primary/20 hover:text-primary">
@@ -100,10 +100,10 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
                             <input
                                 required
                                 type="text"
-                                placeholder="Ex: FBRA Sul Ltda"
+                                placeholder="Ex: N0T4X Sul Ltda"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-primary focus:outline-none focus:border-accent transition-all font-medium"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-accent transition-all font-medium"
                             />
                         </div>
 
@@ -142,14 +142,14 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
 
                         {/* Regime Atual */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 flex items-center gap-2">
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 flex items-center gap-2">
                                 <Sparkles className="h-3 w-3" />
                                 Regime Tributário Vigente
                             </label>
                             <select
                                 value={formData.current_regime}
                                 onChange={(e) => setFormData({ ...formData, current_regime: e.target.value })}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-primary focus:outline-none focus:border-accent transition-all font-medium"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-accent transition-all font-medium"
                             >
                                 <option value="Lucro Presumido">Lucro Presumido</option>
                                 <option value="Lucro Real">Lucro Real</option>
@@ -170,7 +170,7 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
                                 max="5"
                                 value={formData.iss_rate}
                                 onChange={(e) => setFormData({ ...formData, iss_rate: parseFloat(e.target.value) })}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-primary focus:outline-none focus:border-accent transition-all font-medium"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-accent transition-all font-medium"
                             />
                         </div>
                     </div>
@@ -179,7 +179,7 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-4 border border-slate-200 text-primary/60 font-bold rounded-2xl hover:bg-slate-50 transition-all"
+                            className="flex-1 py-4 border border-white/10 text-white/60 font-bold rounded-2xl hover:bg-white/5 transition-all"
                         >
                             Cancelar
                         </button>

@@ -18,11 +18,11 @@ export default function DashboardIndex() {
                     <p className="text-foreground/50">Gerencie seus grupos e analise cenários tributários com precisão estratégica.</p>
                 </div>
                 <Link
-                    href="/dashboard/groups/new"
+                    href="/admin/clients"
                     className="px-6 py-3 bg-accent text-primary font-bold rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 relative z-10"
                 >
                     <Plus className="h-5 w-5" />
-                    Novo Grupo Econômico
+                    Novo Cliente
                 </Link>
                 <div className="absolute right-0 top-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -mr-20 -mt-20" />
             </div>
@@ -45,8 +45,8 @@ export default function DashboardIndex() {
             {/* Recent Groups */}
             <div className="space-y-6">
                 <div className="flex justify-between items-end">
-                    <h2 className="text-2xl font-bold text-gradient">Últimos Grupos Acessados</h2>
-                    <Link href="/dashboard/groups" className="text-accent text-sm font-semibold hover:underline">Ver todos</Link>
+                    <h2 className="text-2xl font-bold text-gradient">Últimos Clientes Atendidos</h2>
+                    <Link href="/admin/clients" className="text-accent text-sm font-semibold hover:underline">Ver todos</Link>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

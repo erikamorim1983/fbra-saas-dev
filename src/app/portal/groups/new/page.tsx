@@ -52,7 +52,7 @@ export default function NewGroupPage() {
             if (error) throw error;
 
             const group = data as any;
-            router.push(`/dashboard/groups/${group.id}`);
+            router.push(`/portal/groups/${group.id}`);
         } catch (error) {
             console.error('Error creating group:', error);
             alert('Erro ao criar grupo. Verifique os dados.');
@@ -63,7 +63,7 @@ export default function NewGroupPage() {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Link href="/dashboard/groups" className="inline-flex items-center gap-2 text-primary/50 hover:text-accent font-medium transition-colors group">
+            <Link href="/portal/groups" className="inline-flex items-center gap-2 text-primary/50 hover:text-accent font-medium transition-colors group">
                 <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                 Voltar para Grupos
             </Link>

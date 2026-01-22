@@ -256,12 +256,12 @@ export default function FunctionalSimulator() {
         // Importar dinamicamente para evitar erros de SSR
         const { generateParecerPDF } = await import('@/lib/pdfGenerator');
 
-        const nomeEmpresa = companyName || 'FBRA_Tecnologia';
+        const nomeEmpresa = companyName || 'N0T4X_Tecnologia';
         console.log('📄 Gerando PDF para empresa:', nomeEmpresa);
 
         generateParecerPDF({
             companyName: nomeEmpresa,
-            consultorName: 'Consultor FBRA',
+            consultorName: 'Consultor N0T4X',
             date: new Date().toLocaleDateString('pt-BR'),
             receitaBruta: calcs.rb,
             receitaLiquida: calcs.rl,
@@ -272,6 +272,108 @@ export default function FunctionalSimulator() {
         });
 
         showNotify('Parecer PDF gerado com sucesso!', 'success');
+    };
+
+    const handleExportMemoriaCalculo = () => {
+        // Criar workbook
+        const wb = XLSX.utils.book_new();
+
+        // ===== ABA 1: Resumo Comparativo =====
+        const resumoData = [
+            ['MEMÓRIA DE CÁLCULO - ANÁLISE TRIBUTÁRIA'],
+            ['Empresa:', companyName || 'Empresa'],
+            ['Data de Emissão:', new Date().toLocaleDateString('pt-BR')],
+            [''],
+            ['RESUMO COMPARATIVO DE CENÁRIOS'],
+            ['Regime Tributário', 'Carga Tributária Mensal (R$)', 'Carga Anual (R$)', 'Eficiência (%)', 'Melhor Opção'],
+            ...calcs.analysis.map(s => [
+                s.regime,
+                s.total,
+                s.total * 12,
+                s.efficiency,
+                s.regime === calcs.best ? '✓ RECOMENDADO' : ''
+            ]),
+            [''],
+            ['ECONOMIA MÁXIMA MENSAL:', `R$ ${calcs.savings.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`],
+            ['ECONOMIA ANUAL ESTIMADA:', `R$ ${(calcs.savings * 12).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`],
+        ];
+
+        const wsResumo = XLSX.utils.aoa_to_sheet(resumoData);
+        wsResumo['!cols'] = [{ wch: 40 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo Comparativo');
+
+        // ===== ABA 2: Memória de Cálculo Detalhada =====
+        const memoriaData = [
+            ['MEMÓRIA DE CÁLCULO DETALHADA'],
+            [''],
+            ['DADOS BASE DA ANÁLISE'],
+            ['Métrica', 'Valor Mensal (R$)', 'Valor Anual (R$)'],
+            ['Receita Bruta', calcs.rb, calcs.rb * 12],
+            ['Receita Líquida', calcs.rl, calcs.rl * 12],
+            ['EBITDA', calcs.ebitda, calcs.ebitda * 12],
+            ['Margem EBITDA', `${((calcs.ebitda / (calcs.rb || 1)) * 100).toFixed(2)}%`, ''],
+            [''],
+            ['COMPOSIÇÃO TRIBUTÁRIA POR REGIME'],
+            [''],
+        ];
+
+        // Adicionar detalhes de cada regime
+        calcs.analysis.forEach(scenario => {
+            memoriaData.push(
+                [`=== ${scenario.regime.toUpperCase()} ===`],
+                ['Imposto', 'Valor Mensal (R$)', 'Alíquota Efetiva (%)'],
+                ['PIS/COFINS', scenario.pis_cofins, `${((scenario.pis_cofins) / (calcs.rb || 1) * 100).toFixed(2)}%`],
+                ['IRPJ/CSLL', scenario.irpj_csll, `${((scenario.irpj_csll) / (calcs.rb || 1) * 100).toFixed(2)}%`],
+                ['ISS', scenario.iss, `${((scenario.iss) / (calcs.rb || 1) * 100).toFixed(2)}%`],
+                ['TOTAL', scenario.total, `${((scenario.total) / (calcs.rb || 1) * 100).toFixed(2)}%`],
+                ['Eficiência', `${scenario.efficiency}%`, ''],
+                [''],
+            );
+        });
+
+        const wsMemoria = XLSX.utils.aoa_to_sheet(memoriaData);
+        wsMemoria['!cols'] = [{ wch: 45 }, { wch: 25 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, wsMemoria, 'Memória de Cálculo');
+
+        // ===== ABA 3: Base Legal =====
+        const baseLegalData = [
+            ['FUNDAMENTAÇÃO LEGAL'],
+            [''],
+            ['LUCRO PRESUMIDO'],
+            ['Base Legal', 'Lei 9.430/1996 e Lei 10.637/2002'],
+            ['PIS/COFINS', '3,65% (Regime Cumulativo) - Não permite créditos'],
+            ['Base de Presunção Serviços', '32% sobre Receita Bruta'],
+            ['IRPJ', '15% sobre Lucro Presumido + Adicional 10% (excedente R$ 20.000/mês)'],
+            ['CSLL', '9% sobre Lucro Presumido'],
+            [''],
+            ['LUCRO REAL NÃO CUMULATIVO'],
+            ['Base Legal', 'Lei 10.637/2002 (PIS) e Lei 10.833/2003 (COFINS)'],
+            ['PIS', '1,65% - Permite créditos sobre insumos'],
+            ['COFINS', '7,60% - Permite créditos sobre insumos'],
+            ['Base de Cálculo IRPJ/CSLL', 'Lucro Líquido Real (Contábil Ajustado)'],
+            ['IRPJ', '15% + Adicional 10%'],
+            ['CSLL', '9%'],
+            [''],
+            ['LUCRO REAL CUMULATIVO'],
+            ['Base Legal', 'Lei 9.718/1998'],
+            ['PIS/COFINS', '0,65% + 3,00% = 3,65% (Sem direito a créditos)'],
+            ['Base de Cálculo IRPJ/CSLL', 'Lucro Líquido Real'],
+            [''],
+            ['SIMPLES NACIONAL'],
+            ['Base Legal', 'Lei Complementar 123/2006'],
+            ['Aplicabilidade', 'Empresas com faturamento até R$ 4.800.000/ano'],
+            ['Alíquotas', 'Progressivas conforme Anexo e faixa de faturamento'],
+        ];
+
+        const wsLegal = XLSX.utils.aoa_to_sheet(baseLegalData);
+        wsLegal['!cols'] = [{ wch: 35 }, { wch: 60 }];
+        XLSX.utils.book_append_sheet(wb, wsLegal, 'Base Legal');
+
+        // Gerar e baixar arquivo
+        const fileName = `memoria_calculo_${(companyName || 'empresa').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+        showNotify('Memória de Cálculo exportada com sucesso!', 'success');
     };
 
     const confirmAddAccount = () => {
@@ -514,7 +616,7 @@ export default function FunctionalSimulator() {
 
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-bold text-primary">Análise <span className="text-accent underline decoration-accent/20">Tributária Live</span></h1>
+                    <h1 className="text-3xl font-bold text-primary">Análise <span className="text-gradient">Tributária Live</span></h1>
                     <p className="text-primary/50">Edite os valores da DRE e veja a análise de cenários em tempo real.</p>
                 </div>
                 <div className="flex gap-3">
@@ -642,13 +744,13 @@ export default function FunctionalSimulator() {
                                         return (
                                             <tr key={field.id} className={`
                                                 ${field.isHeader ? 'bg-slate-100/80 font-bold text-primary border-b border-slate-200' : ''} 
-                                                ${field.isSubtotal ? 'bg-accent/10 font-extrabold text-accent border-y border-accent/20' : ''} 
+                                                ${field.isSubtotal ? 'bg-primary/5 font-extrabold text-primary border-y border-primary/10' : ''} 
                                                 group/row transition-colors hover:bg-slate-50/50
                                             `}>
                                                 <td className={`
                                                     p-3 sticky left-0 z-10 whitespace-nowrap
                                                     ${field.indent ? 'pl-8 text-primary/60' : 'text-primary'} 
-                                                    ${field.isHeader ? 'bg-slate-100/100' : field.isSubtotal ? 'bg-[#fcf8ff]' : 'bg-white'} 
+                                                    ${field.isHeader ? 'bg-slate-100/100' : field.isSubtotal ? 'bg-[#fcfcff]' : 'bg-white'} 
                                                     border-r border-slate-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]
                                                 `}>
                                                     <div className="flex items-center justify-between">
@@ -691,7 +793,7 @@ export default function FunctionalSimulator() {
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-2 border-l border-slate-100 bg-slate-50/50 font-bold text-center font-mono">
+                                                <td className="p-2 border-l border-slate-100 bg-slate-50/50 font-bold text-center font-mono text-primary">
                                                     {(months.reduce((acc, _, idx) => acc + (isTotalField ? getVal(idx) : rowData[idx]), 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
                                             </tr>
@@ -711,14 +813,14 @@ export default function FunctionalSimulator() {
                         </h3>
                         <div className="space-y-4">
                             {calcs.analysis.map((s) => (
-                                <div key={s.regime} className={`flex justify-between items-center p-4 rounded-2xl border ${s.regime === calcs.best ? 'bg-accent/5 border-accent/20' : 'bg-slate-50 border-slate-100'
+                                <div key={s.regime} className={`flex justify-between items-center p-4 rounded-2xl border ${s.regime === calcs.best ? 'bg-accent/10 border-accent/20' : 'bg-white/5 border-white/10'
                                     }`}>
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{s.regime}</p>
                                         <p className="font-mono font-bold text-sm">R$ {s.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
                                     </div>
                                     <div className="text-right">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.regime === calcs.best ? 'bg-accent text-white' : 'bg-slate-200 text-slate-500'
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.regime === calcs.best ? 'bg-accent text-primary' : 'bg-white/10 text-white/50'
                                             }`}>
                                             {s.efficiency}%
                                         </span>
@@ -733,6 +835,10 @@ export default function FunctionalSimulator() {
                                 <button onClick={handleGeneratePDF} className="w-full mt-4 py-3 bg-green-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
                                     <FileDown className="h-4 w-4" />
                                     Gerar Parecer PDF
+                                </button>
+                                <button onClick={handleExportMemoriaCalculo} className="w-full mt-2 py-3 bg-accent text-primary rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20 border border-accent/20">
+                                    <Download className="h-4 w-4" />
+                                    Memória de Cálculo (Excel)
                                 </button>
                             </div>
                         </div>
@@ -755,11 +861,11 @@ export default function FunctionalSimulator() {
                 <div className="flex justify-between items-start border-b-4 border-primary pb-8 mb-10">
                     <div>
                         <h1 className="text-4xl font-black text-primary tracking-tighter">PARECER TÉCNICO TRIBUTÁRIO</h1>
-                        <p className="text-sm font-bold text-slate-400 mt-2 uppercase tracking-[0.3em]">FBRA Intelligence • Relatório Estratégico</p>
+                        <p className="text-sm font-bold text-slate-400 mt-2 uppercase tracking-[0.3em]">N0T4X Intelligence • Relatório Estratégico</p>
                     </div>
                     <div className="text-right">
                         <p className="text-lg font-black text-primary uppercase">Empresa Analisada</p>
-                        <p className="text-slate-600 font-bold">{companyId === 'c1' ? 'Cliente Exemplo S.A.' : 'Empresa do Grupo FBRA'}</p>
+                        <p className="text-slate-600 font-bold">{companyId === 'c1' ? 'Cliente Exemplo S.A.' : 'Empresa do Grupo N0T4X'}</p>
                         <p className="text-xs text-slate-400">Data de Emissão: {new Date().toLocaleDateString('pt-BR')}</p>
                     </div>
                 </div>
@@ -828,32 +934,32 @@ export default function FunctionalSimulator() {
                 {/* Rodapé do Parecer */}
                 <div className="mt-20 pt-10 border-t border-slate-200 flex justify-between items-end">
                     <div className="space-y-1">
-                        <p className="text-xs font-bold text-primary">FBRA SOCIEDADE DE ADVOGADOS</p>
+                        <p className="text-xs font-bold text-primary">N0T4X INTELIGÊNCIA TRIBUTÁRIA</p>
                         <p className="text-xs text-slate-400">Consultoria Tributária e Planejamento Fiscal</p>
                     </div>
                     <div className="text-center w-64 border-t border-slate-400 pt-4">
                         <p className="text-xs font-bold">Responsável Técnico</p>
-                        <p className="text-xs text-slate-400 uppercase tracking-widest font-mono">ID: AI-FBRA-{new Date().getFullYear()}</p>
+                        <p className="text-xs text-slate-400 uppercase tracking-widest font-mono">ID: AI-N0T4X-{new Date().getFullYear()}</p>
                     </div>
                 </div>
             </div>
 
             {/* RELATÓRIO NA TELA (O que o usuário vê no navegador) */}
             {showResults && (
-                <div className="no-print bg-white p-12 rounded-[3.5rem] border border-accent/20 shadow-xl animate-in slide-in-from-bottom-8 duration-1000">
-                    <div className="flex items-center justify-between mb-12 border-b border-slate-100 pb-10">
+                <div className="no-print bg-primary/60 p-12 rounded-[3.5rem] border border-accent/20 shadow-2xl animate-in slide-in-from-bottom-8 duration-1000">
+                    <div className="flex items-center justify-between mb-12 border-b border-white/10 pb-10">
                         <div className="flex items-center gap-6">
                             <div className="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/20">
                                 <Sparkles className="text-accent h-10 w-10" />
                             </div>
                             <div>
-                                <h2 className="text-4xl font-black text-primary tracking-tighter">Parecer Técnico FBRA</h2>
+                                <h2 className="text-4xl font-black text-primary tracking-tighter">Parecer Técnico N0T4X</h2>
                                 <p className="text-[10px] text-primary/30 uppercase tracking-[0.4em] font-black">Tax Intelligence Engine • v2.0</p>
                             </div>
                         </div>
                         <div className="text-right space-y-1">
-                            <p className="text-xs font-black text-primary tracking-widest uppercase">Análise Preditiva</p>
-                            <p className="text-xs text-slate-400 font-bold">Ref: 2024-TR-{Math.floor(Math.random() * 10000)}</p>
+                            <p className="text-xs font-black text-white tracking-widest uppercase">Análise Preditiva</p>
+                            <p className="text-xs text-white/40 font-bold">Ref: 2024-TR-{Math.floor(Math.random() * 10000)}</p>
                             <button
                                 onClick={() => window.print()}
                                 className="mt-2 px-4 py-2 bg-accent text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-accent-light transition-all shadow-lg shadow-accent/20 flex items-center gap-2 ml-auto"

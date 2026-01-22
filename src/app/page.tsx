@@ -18,7 +18,7 @@ export default function Home() {
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -ml-32 -mb-32" />
 
             <h2 className="text-3xl md:text-5xl font-bold mb-6">Pronto para transformar sua <br /> <span className="text-gradient">gestão tributária?</span></h2>
-            <p className="text-foreground/60 mb-10 max-w-xl mx-auto">
+            <p className="text-white/60 mb-10 max-w-xl mx-auto">
               Nossa equipe está preparada para realizar um diagnóstico completo e identificar oportunidades imediatas de economia para sua empresa.
             </p>
             <button className="px-10 py-5 bg-accent hover:bg-accent-light text-primary font-bold rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-accent/20">

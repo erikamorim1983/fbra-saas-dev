@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FBRA | Planejamento Tributário Estratégico",
+  title: "N0T4X | Planejamento Tributário Estratégico",
   description: "Plataforma líder em gestão contábil e jurídica para empresas brasileiras. Transforme sua conformidade tributária em vantagem competitiva.",
 };
 
