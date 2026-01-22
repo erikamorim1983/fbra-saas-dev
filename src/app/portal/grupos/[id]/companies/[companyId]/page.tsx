@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
     ArrowLeft,
     Building2,
@@ -11,36 +11,128 @@ import {
     Sparkles,
     ChevronRight,
     Plus,
-    Calculator
+    Calculator,
+    RefreshCcw
 } from 'lucide-react';
 import Link from 'next/link';
+import { useParams, useSearchParams } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 import FunctionalSimulator from '@/components/FunctionalSimulator';
 
-export default function CompanyDetailsPage() {
+function CompanyDetailsContent() {
+    const supabase = createClient();
+    const { id: groupId, companyId } = useParams();
+    const searchParams = useSearchParams();
+    const scenarioId = searchParams.get('scenarioId');
     const [activeTab, setActiveTab] = useState('dre');
+    const [company, setCompany] = useState<any>(null);
+    const [group, setGroup] = useState<any>(null);
+    const [selectedScenario, setSelectedScenario] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                setLoading(true);
+
+                // Fetch Company
+                const { data: companyData } = await supabase
+                    .from('companies')
+                    .select('*')
+                    .eq('id', companyId as string)
+                    .single();
+                setCompany(companyData);
+
+                // Fetch Group
+                const { data: groupData } = await supabase
+                    .from('company_groups')
+                    .select('*')
+                    .eq('id', groupId as string)
+                    .single();
+                setGroup(groupData);
+
+                // Fetch Scenario
+                if (scenarioId) {
+                    const { data: scenarioData } = await supabase
+                        .from('scenarios')
+                        .select('*')
+                        .eq('id', scenarioId)
+                        .single();
+                    setSelectedScenario(scenarioData);
+                } else {
+                    // Get main scenario if none provided
+                    const { data: mainScenario } = await supabase
+                        .from('scenarios')
+                        .select('*')
+                        .eq('group_id', groupId as string)
+                        .eq('is_main', true)
+                        .single();
+                    setSelectedScenario(mainScenario);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        if (groupId && companyId) {
+            fetchData();
+        }
+    }, [groupId, companyId, supabase]);
+
+    if (loading && !company) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center gap-4 opacity-50">
+                <RefreshCcw className="h-8 w-8 animate-spin text-accent" />
+                <p className="font-bold text-sm text-primary uppercase tracking-widest leading-relaxed">Carregando Inteligência...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Breadcrumbs & Navigation */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <Link href="/portal/groups" className="p-2 glass rounded-lg hover:text-accent transition-colors">
+                    <Link href={`/portal/grupos/${groupId}`} className="p-2 glass rounded-lg hover:text-accent transition-colors text-primary">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div>
-                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground/40">
-                            <Link href="/portal/groups" className="hover:text-foreground transition-colors">Grupos</Link>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary/30">
+                            <Link href="/portal/grupos" className="hover:text-primary transition-colors">Meus Grupos</Link>
                             <ChevronRight className="h-3 w-3" />
-                            <span>Holding Nacional</span>
+                            <Link href={`/portal/grupos/${groupId}`} className="hover:text-primary transition-colors flex items-center gap-1">
+                                <span className="text-accent/60">Grupo:</span> {group?.name || 'Carregando...'}
+                            </Link>
                         </div>
-                        <h1 className="text-3xl font-bold flex items-center gap-3">
-                            N0T4X Tecnologia S.A.
-                            <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] rounded-md border border-green-500/20">Ativa</span>
+                        <h1 className="text-4xl font-black flex items-center gap-4 text-primary italic">
+                            {company?.name || 'Carregando...'}
+                            <div className="flex items-center gap-2">
+                                <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border shadow-sm not-italic ${(company?.status || 'active') === 'active'
+                                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                                    : 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+                                    }`}>
+                                    {company?.status === 'active' ? 'Ativa' : 'Inativa'}
+                                </span>
+                                <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border border-accent/20 bg-accent/5 text-accent shadow-sm not-italic">
+                                    Unidade Fiscal
+                                </span>
+                            </div>
                         </h1>
                     </div>
                 </div>
 
                 <div className="flex gap-3">
+                    {selectedScenario && (
+                        <div className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold flex items-center gap-3 shadow-sm min-w-[280px]">
+                            <Sparkles className="h-4 w-4 text-accent" />
+                            <div className="text-left flex-1">
+                                <p className="text-[10px] uppercase tracking-widest text-primary/40 leading-none mb-1">Cenário Vinculado</p>
+                                <p className="truncate max-w-[200px] text-primary">{selectedScenario.name}</p>
+                            </div>
+                        </div>
+                    )}
                     <button className="px-6 py-3 glass hover:bg-white/10 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                         <History className="h-4 w-4" />
                         Histórico
@@ -74,5 +166,18 @@ export default function CompanyDetailsPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function CompanyDetailsPage() {
+    return (
+        <Suspense fallback={
+            <div className="h-[60vh] flex flex-col items-center justify-center gap-4 opacity-50">
+                <RefreshCcw className="h-8 w-8 animate-spin text-accent" />
+                <p className="font-bold text-sm text-primary uppercase tracking-widest leading-relaxed">Carregando Inteligência...</p>
+            </div>
+        }>
+            <CompanyDetailsContent />
+        </Suspense>
     );
 }

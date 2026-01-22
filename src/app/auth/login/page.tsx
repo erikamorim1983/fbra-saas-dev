@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Shield, Mail, Lock, ChevronRight, ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 
-export default function LoginPage() {
+function LoginContent() {
     const supabase = createClient();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -109,7 +109,7 @@ export default function LoginPage() {
     };
 
     return (
-        <main className={`min-h-screen flex items-center justify-center p-6 relative overflow-hidden ${isAdminMode ? 'bg-[#041018]' : 'bg-slate-50'}`}>
+        <main className={`min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#041018]`}>
             {/* Notification Toast */}
             {notification && (
                 <div className={`fixed top-8 right-8 z-[100] animate-in slide-in-from-right-8 duration-500`}>
@@ -124,43 +124,43 @@ export default function LoginPage() {
             )}
 
             {/* Background Decor */}
-            <div className={`absolute top-0 left-0 w-full h-full -z-10 ${isAdminMode ? 'opacity-30' : 'opacity-10'}`}>
+            <div className={`absolute top-0 left-0 w-full h-full -z-10 opacity-30`}>
                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-accent/20 rounded-full blur-[120px]`} />
             </div>
 
             <div className="w-full max-w-md">
-                <Link href="/" className={`inline-flex items-center gap-2 font-medium mb-8 transition-colors group ${isAdminMode ? 'text-white/60 hover:text-accent' : 'text-primary/40 hover:text-accent'}`}>
+                <Link href="/" className={`inline-flex items-center gap-2 font-medium mb-8 transition-colors group text-white/60 hover:text-accent`}>
                     <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                     Voltar para o site
                 </Link>
 
-                <div className={`${isAdminMode ? 'bg-[#081F2E]/80 border-white/5 shadow-white/5' : 'bg-white shadow-xl shadow-primary/5 border-primary/5'} backdrop-blur-xl p-10 rounded-[40px] border`}>
+                <div className={`bg-[#081F2E]/80 border-white/5 shadow-white/5 backdrop-blur-xl p-10 rounded-[40px] border shadow-2xl`}>
                     <div className="flex flex-col items-center mb-10">
                         <img src="/logo_n0t4x.png" alt="N0T4X" className="h-14 w-auto mb-8" />
 
-                        <h1 className={`text-3xl font-black text-center ${isAdminMode ? 'text-white' : 'text-primary'}`}>
+                        <h1 className={`text-3xl font-black text-center text-white`}>
                             {isAdminMode ? (
-                                <>Portal <span className="text-accent">Adm</span></>
+                                <>Portal <span className="text-accent underline decoration-4 underline-offset-8">Adm</span></>
                             ) : (
                                 <>Acesse o <span className="text-accent underline decoration-4 underline-offset-8">Portal</span></>
                             )}
                         </h1>
-                        <p className={`text-sm mt-4 font-medium ${isAdminMode ? 'text-white/50' : 'text-primary/40 text-center'}`}>
+                        <p className={`text-sm mt-4 font-medium text-white/50 text-center`}>
                             {isAdminMode ? 'Painel de Gestão Administrativa' : 'Área exclusiva para clientes N0T4X'}
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className={`text-[10px] font-black uppercase tracking-[0.2em] px-1 ${isAdminMode ? 'text-white/40' : 'text-primary/40'}`}>E-mail</label>
+                            <label className={`text-[10px] font-black uppercase tracking-[0.2em] px-1 text-white/40`}>E-mail</label>
                             <div className="relative group">
-                                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${isAdminMode ? 'text-white/20' : 'text-primary/20'} group-focus-within:text-accent transition-colors`} />
+                                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20 group-focus-within:text-accent transition-colors`} />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="exemplo@email.com"
-                                    className={`w-full ${isAdminMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100/50 border-slate-200 text-primary'} border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent transition-all font-semibold placeholder:opacity-30`}
+                                    className={`w-full bg-white/5 border-white/10 text-white border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent transition-all font-semibold placeholder:opacity-30`}
                                     required
                                     disabled={loading}
                                 />
@@ -168,15 +168,15 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className={`text-[10px] font-black uppercase tracking-[0.2em] px-1 ${isAdminMode ? 'text-white/40' : 'text-primary/40'}`}>Senha</label>
+                            <label className={`text-[10px] font-black uppercase tracking-[0.2em] px-1 text-white/40`}>Senha</label>
                             <div className="relative group">
-                                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${isAdminMode ? 'text-white/20' : 'text-primary/20'} group-focus-within:text-accent transition-colors`} />
+                                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20 group-focus-within:text-accent transition-colors`} />
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className={`w-full ${isAdminMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100/50 border-slate-200 text-primary'} border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent transition-all font-bold placeholder:opacity-30`}
+                                    className={`w-full bg-white/5 border-white/10 text-white border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent transition-all font-bold placeholder:opacity-30`}
                                     required
                                     disabled={loading}
                                 />
@@ -192,10 +192,10 @@ export default function LoginPage() {
                                         onChange={(e) => setRememberMe(e.target.checked)}
                                         className="peer sr-only"
                                     />
-                                    <div className={`h-5 w-5 rounded-md border-2 transition-all ${isAdminMode ? 'border-white/10 bg-white/5 peer-checked:border-accent peer-checked:bg-accent' : 'border-slate-200 bg-slate-50 peer-checked:border-accent peer-checked:bg-accent'}`}></div>
+                                    <div className={`h-5 w-5 rounded-md border-2 transition-all border-white/10 bg-white/5 peer-checked:border-accent peer-checked:bg-accent`}></div>
                                     <Shield className={`absolute h-3 w-3 text-primary scale-0 peer-checked:scale-100 transition-transform`} strokeWidth={3} />
                                 </div>
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${isAdminMode ? 'text-white/40 group-hover:text-white/60' : 'text-primary/40 group-hover:text-primary/60'} transition-colors`}>Lembrar-me</span>
+                                <span className={`text-[10px] font-black uppercase tracking-widest text-white/40 group-hover:text-white/60 transition-colors`}>Lembrar-me</span>
                             </label>
                             <Link href="#" className="text-[10px] text-accent hover:text-accent-light transition-colors font-black uppercase tracking-widest">Esqueceu a senha?</Link>
                         </div>
@@ -216,11 +216,11 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="text-center mt-6 pt-6 border-t border-primary/5">
-                        <p className={`text-[10px] font-medium mb-1 ${isAdminMode ? 'text-white/20' : 'text-primary/20'}`}>
+                    <div className="text-center mt-6 pt-6 border-t border-white/5">
+                        <p className={`text-[10px] font-medium mb-1 text-white/20`}>
                             {isAdminMode ? 'Acesso restrito a colaboradores autorizados.' : 'Não possui conta? O acesso é liberado por nossa equipe.'}
                         </p>
-                        <Link href="/#contato" className={`text-xs font-bold transition-colors ${isAdminMode ? 'text-white/40 hover:text-accent' : 'text-primary/40 hover:text-accent'}`}>
+                        <Link href="/#contato" className={`text-xs font-bold transition-colors text-white/40 hover:text-accent`}>
                             Problemas com acesso? Entre em contato
                         </Link>
                     </div>
@@ -230,3 +230,14 @@ export default function LoginPage() {
     );
 }
 
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[#041018]">
+                <Loader2 className="h-8 w-8 animate-spin text-accent" />
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
+    );
+}

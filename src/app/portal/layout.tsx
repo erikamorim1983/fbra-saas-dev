@@ -14,7 +14,8 @@ import {
     Users,
     ChevronLeft,
     ChevronRight,
-    Menu
+    Menu,
+    ShieldCheck
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 
@@ -42,12 +43,12 @@ export default function PortalLayout({
             setUser(user);
 
             if (user) {
-                const { data: profile } = await supabase
+                const { data: profileData } = await supabase
                     .from('profiles')
-                    .select('*')
+                    .select('*, organizations(*)')
                     .eq('id', user.id)
                     .single();
-                setProfile(profile);
+                setProfile(profileData);
             }
         };
         fetchUserData();
@@ -79,14 +80,24 @@ export default function PortalLayout({
                 </button>
 
                 {/* Logo */}
-                <div className={`p-6 ${isExpanded ? 'px-6' : 'px-2'} flex items-center justify-center border-b border-white/5`}>
-                    <Link href="/portal" className="flex items-center gap-2">
-                        {isExpanded ? (
-                            <img src="/logo_n0t4x.png" alt="N0T4X" className="h-10 w-auto" />
-                        ) : (
-                            <div className="w-10 h-10 relative overflow-hidden rounded-lg bg-white/5 border border-white/10 shadow-lg">
-                                <Image src="/logo_n0t4x.png" alt="N0T4X" fill className="object-contain" />
+                <div className={`p-6 ${isExpanded ? 'px-6' : 'px-2'} flex items-center justify-center border-b border-white/5 h-24`}>
+                    <Link href="/portal" className="flex items-center gap-2 w-full h-full">
+                        {profile?.organizations?.logo_url ? (
+                            <div className="relative w-full h-full">
+                                <img
+                                    src={profile.organizations.logo_url}
+                                    alt={profile.organizations.name}
+                                    className={`object-contain w-full h-full ${!isExpanded ? 'p-1' : ''}`}
+                                />
                             </div>
+                        ) : (
+                            isExpanded ? (
+                                <img src="/logo_n0t4x.png" alt="N0T4X" className="h-10 w-auto mx-auto" />
+                            ) : (
+                                <div className="w-10 h-10 relative overflow-hidden rounded-lg bg-white/5 border border-white/10 shadow-lg mx-auto">
+                                    <Image src="/logo_n0t4x.png" alt="N0T4X" fill className="object-contain p-1" />
+                                </div>
+                            )
                         )}
                     </Link>
                 </div>
@@ -136,20 +147,26 @@ export default function PortalLayout({
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto bg-slate-50">
-                <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 bg-white/80 backdrop-blur-xl z-20">
+                <header className="h-20 border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 bg-white/80 backdrop-blur-xl z-20">
                     <div>
-                        <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/30">Portal do Cliente</h2>
-                        <p className="text-lg font-bold text-primary">Bem-vindo, {profile?.full_name?.split(' ')[0] || 'Cliente'}</p>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-accent flex items-center gap-2">
+                            <ShieldCheck className="h-3 w-3" /> {profile?.organizations?.name || 'Portal do Cliente'}
+                        </h2>
+                        <p className="text-xl font-black text-primary italic">Bem-vindo, {profile?.full_name?.split(' ')[0] || 'Consultor'}</p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-6">
                         <div className="flex flex-col items-end">
-                            <span className="text-xs font-bold text-primary truncate max-w-[120px]">
+                            <span className="text-xs font-black text-primary truncate max-w-[180px] leading-tight">
                                 {profile?.full_name || user?.email?.split('@')[0]}
                             </span>
-                            <span className="text-[10px] text-primary/40 uppercase font-bold tracking-tight">Status: Ativo</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <span className="text-[9px] text-primary/40 uppercase font-black tracking-widest">Consultoria Ativa</span>
+                            </div>
                         </div>
-                        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-accent font-bold shadow-lg shadow-primary/10">
+                        <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center text-accent font-black shadow-xl shadow-primary/10 border border-white/5 relative group cursor-pointer">
+                            <div className="absolute inset-0 bg-accent opacity-0 group-hover:opacity-10 transition-opacity rounded-2xl"></div>
                             {userInitials}
                         </div>
                     </div>

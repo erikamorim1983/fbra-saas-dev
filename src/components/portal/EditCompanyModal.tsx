@@ -12,23 +12,23 @@ import {
     RefreshCcw,
     Sparkles
 } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import { updateCompany } from '@/app/portal/grupos/company-actions';
 
-interface NewCompanyModalProps {
+interface EditCompanyModalProps {
     groupId: string;
+    company: any;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewCompanyModalProps) {
-    const supabase = createClient();
+export default function EditCompanyModal({ groupId, company, onClose, onSuccess }: EditCompanyModalProps) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        name: '',
-        cnpj: '',
-        segment: 'Serviços',
-        current_regime: 'Lucro Presumido',
-        iss_rate: 5
+        name: company.name,
+        cnpj: company.cnpj,
+        segment: company.segment || 'Serviços',
+        current_regime: company.current_regime || 'Lucro Presumido',
+        iss_rate: company.iss_rate || 5
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -36,27 +36,11 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
         setLoading(true);
 
         try {
-
-            const { data, error } = await supabase
-                .from('companies')
-                .insert({
-                    group_id: groupId,
-                    name: formData.name,
-                    cnpj: formData.cnpj,
-                    segment: formData.segment,
-                    current_regime: formData.current_regime,
-                    iss_rate: formData.iss_rate
-                } as any)
-                .select();
-
-            if (error) {
-                throw error;
-            }
-
+            await updateCompany(company.id, groupId, formData);
             onSuccess();
         } catch (error: any) {
-            console.error('Error creating company:', error);
-            alert('Erro ao cadastrar empresa: ' + (error.message || 'Verifique o console para mais detalhes.'));
+            console.error('Error updating company:', error);
+            alert('Erro ao atualizar empresa: ' + (error.message || 'Verifique o console.'));
         } finally {
             setLoading(false);
         }
@@ -72,8 +56,8 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
                             <Building2 className="h-7 w-7" />
                         </div>
                         <div>
-                            <h2 className="text-3xl font-black italic text-white leading-none">Nova <span className="text-accent underline decoration-accent/10">Unidade</span></h2>
-                            <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] mt-2">Cadastro de CNPJ Coligado</p>
+                            <h2 className="text-3xl font-black italic text-white leading-none">Editar <span className="text-accent underline decoration-accent/10">Unidade</span></h2>
+                            <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] mt-2">Atualizar dados do CNPJ Coligado</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-3 hover:bg-white/5 rounded-2xl transition-colors text-white/20 hover:text-white">
@@ -199,7 +183,7 @@ export default function NewCompanyModal({ groupId, onClose, onSuccess }: NewComp
                             className="flex-[2] py-5 bg-accent text-primary font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-accent/20 flex items-center justify-center gap-3 text-xs"
                         >
                             {loading ? <RefreshCcw className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-                            {loading ? 'Sincronizando...' : 'Finalizar Cadastro da Unidade'}
+                            {loading ? 'Salvando...' : 'Salvar Alterações'}
                         </button>
                     </div>
                 </form>

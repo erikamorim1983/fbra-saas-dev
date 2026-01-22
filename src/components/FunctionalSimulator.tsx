@@ -110,7 +110,6 @@ export default function FunctionalSimulator() {
             }
 
             try {
-                console.log('📂 Carregando dados salvos para empresa:', companyId);
 
                 // Buscar nome da empresa
                 const { data: companyData } = await supabase
@@ -138,7 +137,6 @@ export default function FunctionalSimulator() {
                 }
 
                 if (data && data.length > 0) {
-                    console.log('📂 Dados encontrados:', data.length, 'meses');
 
                     // Converter dados do banco para o formato do componente
                     const newValues: Record<string, number[]> = { ...values };
@@ -170,7 +168,6 @@ export default function FunctionalSimulator() {
                     setValues(newValues);
                     showNotify('Dados carregados do histórico!', 'info');
                 } else {
-                    console.log('📂 Nenhum dado salvo encontrado para esta empresa.');
                 }
             } catch (err) {
                 console.error('❌ Erro ao carregar dados:', err);
@@ -257,7 +254,6 @@ export default function FunctionalSimulator() {
         const { generateParecerPDF } = await import('@/lib/pdfGenerator');
 
         const nomeEmpresa = companyName || 'N0T4X_Tecnologia';
-        console.log('📄 Gerando PDF para empresa:', nomeEmpresa);
 
         generateParecerPDF({
             companyName: nomeEmpresa,
@@ -472,8 +468,6 @@ export default function FunctionalSimulator() {
         // Obter companyId direto dos parâmetros da URL de forma segura
         const resolvedCompanyId = companyId as string;
 
-        console.log('📊 Tentando salvar dados...');
-        console.log('📊 Company ID detectado:', resolvedCompanyId);
 
         if (!resolvedCompanyId) {
             showNotify('Erro: ID da empresa não detectado na URL.', 'error');
@@ -501,7 +495,6 @@ export default function FunctionalSimulator() {
                 };
             });
 
-            console.log('📊 Dados a serem salvos:', monthRecords[0]); // Log do primeiro mês como exemplo
 
             const { data, error: dbError } = await supabase
                 .from('monthly_financials')
@@ -518,7 +511,6 @@ export default function FunctionalSimulator() {
                 throw new Error(dbError.message || 'Falha na comunicação com o banco');
             }
 
-            console.log('✅ Dados salvos com sucesso:', data);
             showNotify('Os 12 meses foram salvos com sucesso no banco de dados!', 'success');
         } catch (error: any) {
             console.error('❌ Exceção ao salvar:', error);
