@@ -19,7 +19,7 @@ import {
 import { createClient } from '@/utils/supabase/client';
 
 const menuItems = [
-    { icon: Building2, label: 'Grupos de Empresas', href: '/portal/groups', roles: ['admin', 'consultant', 'client'] },
+    { icon: Building2, label: 'Grupos de Empresas', href: '/portal/grupos', roles: ['admin', 'consultant', 'client'] },
     { icon: Calculator, label: 'Simulador Tributário', href: '/portal/simulator', roles: ['admin', 'consultant', 'client'] },
     { icon: FileText, label: 'Pareceres Técnicos', href: '/portal/reports', roles: ['admin', 'consultant', 'client'] },
 ];

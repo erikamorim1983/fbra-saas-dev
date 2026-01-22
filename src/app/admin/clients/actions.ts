@@ -57,23 +57,36 @@ export async function inviteClient(email: string, fullName: string, groupIds: st
 
     if (inviteError) throw inviteError;
 
-    // 2. Create/Update profile
+    // 2. Create Organization for this client
+    const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .insert({ name: fullName + ' Org' })
+        .select()
+        .single();
+
+    if (orgError) throw orgError;
+
+    // 3. Create/Update profile linked to Organization
     const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
             id: authData.user.id,
             full_name: fullName,
             role: 'client',
-            status: 'pending'
+            status: 'pending',
+            org_id: orgData.id
         });
 
     if (profileError) throw profileError;
 
-    // 3. Link to groups by updating the owner_id in company_groups
+    // 4. Link groups to Organization (instead of just owner_id)
     if (groupIds && groupIds.length > 0) {
         const { error: linkError } = await supabase
             .from('company_groups')
-            .update({ owner_id: authData.user.id })
+            .update({
+                owner_id: authData.user.id,
+                org_id: orgData.id
+            })
             .in('id', groupIds);
 
         if (linkError) throw linkError;

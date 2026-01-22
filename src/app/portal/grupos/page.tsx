@@ -57,7 +57,7 @@ export default function GroupsPage() {
                     <p className="text-primary/50">Gerencie e analise holdings de forma consolidada.</p>
                 </div>
                 <Link
-                    href="/portal/groups/new"
+                    href="/portal/grupos/new"
                     className="px-6 py-3 bg-accent text-primary rounded-xl text-sm font-bold hover:scale-105 transition-all shadow-xl shadow-accent/20 flex items-center gap-2"
                 >
                     <Plus className="h-5 w-5" />
@@ -121,7 +121,7 @@ export default function GroupsPage() {
                             </div>
 
                             <Link
-                                href={`/portal/groups/${group.id}`}
+                                href={`/portal/grupos/${group.id}`}
                                 className="w-full py-4 bg-slate-50 hover:bg-primary hover:text-white text-center rounded-xl text-sm font-bold transition-all text-primary"
                             >
                                 Detalhes do Grupo
