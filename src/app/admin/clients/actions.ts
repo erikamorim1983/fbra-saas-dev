@@ -52,7 +52,8 @@ export async function inviteClient(email: string, fullName: string, groupIds: st
 
     // 1. Invite user
     const { data: authData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-        data: { full_name: fullName }
+        data: { full_name: fullName },
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback`
     });
 
     if (inviteError) throw inviteError;
