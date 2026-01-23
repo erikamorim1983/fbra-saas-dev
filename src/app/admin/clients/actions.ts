@@ -48,53 +48,59 @@ export async function getCompanyGroups() {
 }
 
 export async function inviteClient(email: string, fullName: string, groupIds: string[]) {
-    const supabase = createAdminClient();
+    try {
+        const supabase = createAdminClient();
 
-    // 1. Invite user
-    const { data: authData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-        data: { full_name: fullName },
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback`
-    });
-
-    if (inviteError) throw inviteError;
-
-    // 2. Create Organization for this client
-    const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .insert({ name: fullName + ' Org' })
-        .select()
-        .single();
-
-    if (orgError) throw orgError;
-
-    // 3. Create/Update profile linked to Organization
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-            id: authData.user.id,
-            full_name: fullName,
-            role: 'client',
-            status: 'pending',
-            org_id: orgData.id
+        // 1. Invite user
+        const { data: authData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+            data: { full_name: fullName },
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback`
         });
 
-    if (profileError) throw profileError;
+        if (inviteError) return { error: inviteError.message };
+        if (!authData.user) return { error: 'Falha ao gerar usuário.' };
 
-    // 4. Link groups to Organization (instead of just owner_id)
-    if (groupIds && groupIds.length > 0) {
-        const { error: linkError } = await supabase
-            .from('company_groups')
-            .update({
-                owner_id: authData.user.id,
+        // 2. Create Organization for this client
+        const { data: orgData, error: orgError } = await supabase
+            .from('organizations')
+            .insert({ name: fullName + ' Org' })
+            .select()
+            .single();
+
+        if (orgError) return { error: orgError.message };
+
+        // 3. Create/Update profile linked to Organization
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+                id: authData.user.id,
+                full_name: fullName,
+                role: 'client',
+                status: 'pending',
                 org_id: orgData.id
-            })
-            .in('id', groupIds);
+            });
 
-        if (linkError) throw linkError;
+        if (profileError) return { error: profileError.message };
+
+        // 4. Link groups to Organization (instead of just owner_id)
+        if (groupIds && groupIds.length > 0) {
+            const { error: linkError } = await supabase
+                .from('company_groups')
+                .update({
+                    owner_id: authData.user.id,
+                    org_id: orgData.id
+                })
+                .in('id', groupIds);
+
+            if (linkError) return { error: linkError.message };
+        }
+
+        revalidatePath('/admin/clients');
+        return { success: true };
+    } catch (err: any) {
+        console.error('Invite Client Error:', err);
+        return { error: err.message || 'Erro inesperado ao convidar cliente.' };
     }
-
-    revalidatePath('/admin/clients');
-    return { success: true };
 }
 
 export async function updateClientGroups(clientId: string, groupIds: string[]) {

@@ -44,29 +44,35 @@ export async function getUsers() {
 }
 
 export async function inviteUser(email: string, fullName: string, role: string) {
-    const supabase = createAdminClient();
+    try {
+        const supabase = createAdminClient();
 
-    const { data: authData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-        data: { full_name: fullName },
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback`
-    });
-
-    if (inviteError) throw inviteError;
-
-    // Force create/update profile using upsert to ensure Fernando appears even without a trigger
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-            id: authData.user.id,
-            full_name: fullName,
-            role: role,
-            status: 'pending' // Keeps as pending until they accept the invite
+        const { data: authData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+            data: { full_name: fullName },
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback`
         });
 
-    if (profileError) throw profileError;
+        if (inviteError) return { error: inviteError.message };
+        if (!authData.user) return { error: 'Falha ao gerar usuário.' };
 
-    revalidatePath('/admin/settings/users');
-    return { success: true };
+        // Force create/update profile using upsert
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+                id: authData.user.id,
+                full_name: fullName,
+                role: role,
+                status: 'pending'
+            });
+
+        if (profileError) return { error: profileError.message };
+
+        revalidatePath('/admin/settings/users');
+        return { success: true };
+    } catch (err: any) {
+        console.error('Invite Error:', err);
+        return { error: err.message || 'Erro inesperado ao convidar usuário.' };
+    }
 }
 
 export async function updateUser(id: string, updates: any) {
