@@ -2,7 +2,8 @@
 
 import { X, User, Mail, Shield, RefreshCcw, CheckCircle, Search, Building2, Save } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getPlans, inviteClient } from '@/app/admin/clients/actions';
+import { getPlans } from '@/app/admin/plans/actions';
+import { inviteClient } from '@/app/admin/clients/actions';
 
 interface InviteClientModalProps {
     onClose: () => void;

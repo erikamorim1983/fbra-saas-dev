@@ -2,7 +2,8 @@
 
 import { X, User, Shield, RefreshCcw, Save, Trash2, Ban, CheckCircle, Building2, Search, Link2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getCompanyGroups, updateClientGroups } from '@/app/admin/clients/actions';
+import { updateClient } from '@/app/admin/clients/actions';
+import { getPlans } from '@/app/admin/plans/actions';
 import { deleteUser, updateUser } from '@/app/admin/settings/users/actions';
 
 interface EditClientModalProps {
@@ -14,25 +15,25 @@ interface EditClientModalProps {
 export default function EditClientModal({ client, onClose, onSuccess }: EditClientModalProps) {
     const [fullName, setFullName] = useState(client.full_name || '');
     const [status, setStatus] = useState(client.status || 'active');
-    const [selectedGroups, setSelectedGroups] = useState<string[]>(client.groups?.map((g: any) => g.id) || []);
-    const [groups, setGroups] = useState<any[]>([]);
+    const [orgName, setOrgName] = useState(client.organization_name || '');
+    const [selectedPlan, setSelectedPlan] = useState<string>(client.plan?.id || '');
+    const [plans, setPlans] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [fetchingGroups, setFetchingGroups] = useState(true);
+    const [fetchingPlans, setFetchingPlans] = useState(true);
     const [error, setError] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        async function loadGroups() {
+        async function loadPlans() {
             try {
-                const data = await getCompanyGroups();
-                setGroups(data || []);
+                const data = await getPlans();
+                setPlans(data || []);
             } catch (err) {
-                console.error('Erro ao carregar grupos:', err);
+                console.error('Erro ao carregar planos:', err);
             } finally {
-                setFetchingGroups(false);
+                setFetchingPlans(false);
             }
         }
-        loadGroups();
+        loadPlans();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -41,10 +42,12 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
         setError('');
 
         try {
-            // Update profile info
-            await updateUser(client.id, { full_name: fullName, status });
-            // Update group links
-            await updateClientGroups(client.id, selectedGroups);
+            await updateClient(client.id, {
+                fullName,
+                status,
+                orgName,
+                planId: selectedPlan
+            });
             onSuccess();
         } catch (err: any) {
             setError(err.message || 'Erro ao atualizar cliente');
@@ -65,15 +68,6 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
         }
     };
 
-    const toggleGroup = (id: string) => {
-        setSelectedGroups(prev =>
-            prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
-        );
-    };
-
-    const filteredGroups = groups.filter(g =>
-        g.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
@@ -127,52 +121,55 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-end px-1">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-primary/40">Grupos Econômicos Vinculados</label>
-                            <span className="text-[10px] font-bold text-accent">{selectedGroups.length} grupo(s)</span>
-                        </div>
-
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 px-1">Nome da Organização</label>
                         <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/20" />
+                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/20" />
                             <input
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                required
+                                value={orgName}
+                                onChange={(e) => setOrgName(e.target.value)}
                                 type="text"
-                                placeholder="Buscar grupos..."
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-xs font-bold focus:outline-none focus:border-accent transition-all"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold focus:outline-none focus:border-accent transition-all"
                             />
                         </div>
+                    </div>
 
-                        <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded-3xl border border-slate-100 custom-scrollbar">
-                            {fetchingGroups ? (
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 px-1 italic">Alterar Plano Contratado</label>
+
+                        <div className="grid grid-cols-1 gap-3">
+                            {fetchingPlans ? (
                                 <div className="p-8 text-center"><RefreshCcw className="h-5 w-5 animate-spin mx-auto text-accent" /></div>
-                            ) : filteredGroups.map(group => {
-                                const isLinkedToOther = group.owner_id && group.owner_id !== client.id;
-                                return (
-                                    <button
-                                        key={group.id}
-                                        type="button"
-                                        disabled={isLinkedToOther}
-                                        onClick={() => toggleGroup(group.id)}
-                                        className={`flex items-center justify-between p-4 rounded-xl border transition-all ${selectedGroups.includes(group.id)
-                                                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                                                : isLinkedToOther
-                                                    ? 'bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed opacity-50'
-                                                    : 'bg-white border-slate-100 text-primary/60 hover:border-accent/30'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Building2 className={`h-4 w-4 ${selectedGroups.includes(group.id) ? 'text-accent' : 'text-primary/20'}`} />
-                                            <div className="text-left">
-                                                <p className="text-xs font-bold">{group.name}</p>
-                                                {isLinkedToOther && <p className="text-[9px] font-medium text-rose-400">Vinculado a outro cliente</p>}
-                                            </div>
+                            ) : plans.map(plan => (
+                                <button
+                                    key={plan.id}
+                                    type="button"
+                                    onClick={() => setSelectedPlan(plan.id)}
+                                    className={`flex flex-col p-5 rounded-2xl border transition-all text-left relative group ${selectedPlan === plan.id
+                                        ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-[1.01]'
+                                        : 'bg-white border-slate-100 hover:border-accent/30'
+                                        }`}
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className={`text-lg font-black italic tracking-tight ${selectedPlan === plan.id ? 'text-accent' : 'text-primary'}`}>{plan.name}</h3>
+                                        <div className={`text-right ${selectedPlan === plan.id ? 'text-white' : 'text-primary'}`}>
+                                            <span className="text-xs font-bold leading-none text-accent">R$ {plan.price.toLocaleString('pt-BR')}</span>
                                         </div>
-                                        {selectedGroups.includes(group.id) && <CheckCircle className="h-4 w-4 text-accent" />}
-                                    </button>
-                                );
-                            })}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <span className={`text-[10px] font-bold ${selectedPlan === plan.id ? 'text-white/80' : 'text-primary/60'}`}>Usuários: <b>{plan.max_users}</b></span>
+                                        <span className={`text-[10px] font-bold ${selectedPlan === plan.id ? 'text-white/80' : 'text-primary/60'}`}>Análises: <b>{plan.max_companies}</b></span>
+                                    </div>
+
+                                    {selectedPlan === plan.id && (
+                                        <div className="absolute right-4 bottom-4">
+                                            <CheckCircle className="h-6 w-6 text-accent" />
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -191,8 +188,8 @@ export default function EditClientModal({ client, onClose, onSuccess }: EditClie
                                 type="button"
                                 onClick={() => setStatus(status === 'blocked' ? 'active' : 'blocked')}
                                 className={`py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all border ${status === 'blocked'
-                                        ? 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
-                                        : 'bg-amber-50 border-amber-100 text-amber-600 hover:bg-amber-100'
+                                    ? 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
+                                    : 'bg-amber-50 border-amber-100 text-amber-600 hover:bg-amber-100'
                                     }`}
                             >
                                 {status === 'blocked' ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}

@@ -46,16 +46,6 @@ export async function getClients() {
     });
 }
 
-export async function getPlans() {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-        .from('plans')
-        .select('*')
-        .order('price', { ascending: true });
-
-    if (error) throw error;
-    return data;
-}
 
 export async function inviteClient(email: string, fullName: string, orgName: string, planId: string) {
     try {
@@ -104,16 +94,40 @@ export async function inviteClient(email: string, fullName: string, orgName: str
     }
 }
 
-export async function updateClientGroups(clientId: string, groupIds: string[]) {
+export async function updateClient(clientId: string, data: { fullName: string, status: string, orgName: string, planId: string }) {
     const supabase = createAdminClient();
 
-    // Reset current ownership for this user
-    await supabase.from('company_groups').update({ owner_id: null }).eq('owner_id', clientId);
+    // 1. Get profile to find org_id
+    const { data: profile, error: profileFetchError } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', clientId)
+        .single();
 
-    // Set new ownership
-    if (groupIds && groupIds.length > 0) {
-        const { error } = await supabase.from('company_groups').update({ owner_id: clientId }).in('id', groupIds);
-        if (error) throw error;
+    if (profileFetchError) throw profileFetchError;
+
+    // 2. Update Profile
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+            full_name: data.fullName,
+            status: data.status as any
+        })
+        .eq('id', clientId);
+
+    if (profileError) throw profileError;
+
+    // 3. Update Organization
+    if (profile.org_id) {
+        const { error: orgError } = await supabase
+            .from('organizations')
+            .update({
+                name: data.orgName,
+                plan_id: data.planId
+            })
+            .eq('id', profile.org_id);
+
+        if (orgError) throw orgError;
     }
 
     revalidatePath('/admin/clients');

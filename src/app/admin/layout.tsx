@@ -14,13 +14,15 @@ import {
     Users,
     ChevronLeft,
     ChevronRight,
-    Menu
+    Menu,
+    CreditCard
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 
 const menuItems = [
     { icon: LayoutDashboard, label: 'Início', href: '/admin', roles: ['admin', 'consultant'] },
     { icon: Users, label: 'Meus Clientes', href: '/admin/clients', roles: ['admin', 'consultant'] },
+    { icon: CreditCard, label: 'Modelos de Planos', href: '/admin/plans', roles: ['admin'] },
 ];
 
 export default function DashboardLayout({
