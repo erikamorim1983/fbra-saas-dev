@@ -1,0 +1,1 @@
+https://qvrgtcukrtfjuigcltgh.supabase.co/auth/v1/verify?token=ac9fb2428f8d0efdc5f40f7a7062eed99bce5bcbb95696e44f86d6a3&type=invite&redirect_to=https%3A%2F%2Ffbra-saas-dev-cgjf.vercel.app%2Fauth%2Fcallback%3Fnext%3D%2Fauth%2Fset-password

@@ -110,3 +110,18 @@ export async function deleteUser(id: string) {
     revalidatePath('/admin/settings/users');
     return { success: true };
 }
+
+export async function generateInviteLink(email: string) {
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase.auth.admin.generateLink({
+        type: 'invite',
+        email: email,
+        options: {
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback?next=/auth/set-password`
+        }
+    });
+
+    if (error) return { error: error.message };
+    return { link: data.properties.action_link };
+}

@@ -9,61 +9,74 @@ export async function getClients() {
     const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
     if (authError) throw authError;
 
+    // Fetch profiles with organization and plan join
     const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+            *,
+            organizations (
+                id,
+                name,
+                plans (
+                    id,
+                    name,
+                    max_users,
+                    max_companies,
+                    has_parecer
+                )
+            )
+        `)
         .eq('role', 'client')
         .order('created_at', { ascending: false });
 
     if (profileError) throw profileError;
 
-    const { data: groups, error: groupsError } = await supabase
-        .from('company_groups')
-        .select('id, name, owner_id');
-
-    if (groupsError) throw groupsError;
-
     return profiles.map(profile => {
         const authUser = authUsers.find(u => u.id === profile.id);
-        const ownedGroups = groups.filter(g => g.owner_id === profile.id);
+        const org = profile.organizations;
+        const plan = org?.plans;
 
         return {
             ...profile,
             email: authUser?.email || 'N/A',
-            groups: ownedGroups,
+            organization_name: org?.name || 'Sem Org',
+            plan: plan || null,
             status: (authUser?.email_confirmed_at || authUser?.last_sign_in_at) ? 'active' : 'pending'
         };
     });
 }
 
-export async function getCompanyGroups() {
+export async function getPlans() {
     const supabase = createAdminClient();
     const { data, error } = await supabase
-        .from('company_groups')
-        .select('id, name, owner_id')
-        .order('name');
+        .from('plans')
+        .select('*')
+        .order('price', { ascending: true });
 
     if (error) throw error;
     return data;
 }
 
-export async function inviteClient(email: string, fullName: string, groupIds: string[]) {
+export async function inviteClient(email: string, fullName: string, orgName: string, planId: string) {
     try {
         const supabase = createAdminClient();
 
         // 1. Invite user
         const { data: authData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
             data: { full_name: fullName },
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback`
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback?next=/auth/set-password`
         });
 
         if (inviteError) return { error: inviteError.message };
         if (!authData.user) return { error: 'Falha ao gerar usuário.' };
 
-        // 2. Create Organization for this client
+        // 2. Create Organization for this client with plan
         const { data: orgData, error: orgError } = await supabase
             .from('organizations')
-            .insert({ name: fullName + ' Org' })
+            .insert({
+                name: orgName,
+                plan_id: planId
+            })
             .select()
             .single();
 
@@ -77,23 +90,11 @@ export async function inviteClient(email: string, fullName: string, groupIds: st
                 full_name: fullName,
                 role: 'client',
                 status: 'pending',
-                org_id: orgData.id
+                org_id: orgData.id,
+                is_org_admin: true // The client is use admin of their org
             });
 
         if (profileError) return { error: profileError.message };
-
-        // 4. Link groups to Organization (instead of just owner_id)
-        if (groupIds && groupIds.length > 0) {
-            const { error: linkError } = await supabase
-                .from('company_groups')
-                .update({
-                    owner_id: authData.user.id,
-                    org_id: orgData.id
-                })
-                .in('id', groupIds);
-
-            if (linkError) return { error: linkError.message };
-        }
 
         revalidatePath('/admin/clients');
         return { success: true };

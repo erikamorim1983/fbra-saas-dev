@@ -130,7 +130,8 @@ export default function ClientsManagementPage() {
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-primary/5">
                                 <th className="p-8 text-[10px] font-black uppercase tracking-[0.2em] text-primary/30">Cliente e Contato</th>
-                                <th className="p-8 text-[10px] font-black uppercase tracking-[0.2em] text-primary/30">Grupos Vinculados</th>
+                                <th className="p-8 text-[10px] font-black uppercase tracking-[0.2em] text-primary/30">Organização e Plano</th>
+                                <th className="p-8 text-[10px] font-black uppercase tracking-[0.2em] text-primary/30">Limites do Contrato</th>
                                 <th className="p-8 text-[10px] font-black uppercase tracking-[0.2em] text-primary/30">Status</th>
                                 <th className="p-8 text-right text-[10px] font-black uppercase tracking-[0.2em] text-primary/30 px-10">Ações</th>
                             </tr>
@@ -153,31 +154,41 @@ export default function ClientsManagementPage() {
                                         </div>
                                     </td>
                                     <td className="p-8">
-                                        <div className="flex flex-wrap gap-2 max-w-[300px]">
-                                            {client.groups && client.groups.length > 0 ? (
-                                                client.groups.map((group: any) => (
-                                                    <span key={group.id} className="px-3 py-1 bg-accent/10 text-accent text-[10px] font-black uppercase tracking-wider rounded-lg border border-accent/20 flex items-center gap-1.5 ring-1 ring-accent/5">
-                                                        <Building2 className="h-3 w-3" />
-                                                        {group.name}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-rose-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 opacity-60 italic">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    Sem Grupos
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-primary text-sm flex items-center gap-2">
+                                                <Building2 className="h-4 w-4 text-accent" />
+                                                {client.organization_name}
+                                            </p>
+                                            {client.plan ? (
+                                                <span className="px-3 py-1 bg-primary text-accent text-[9px] font-black uppercase tracking-wider rounded-lg inline-block ring-1 ring-accent/20">
+                                                    {client.plan.name}
                                                 </span>
+                                            ) : (
+                                                <span className="text-primary/20 text-[10px] font-bold italic">Sem plano atribuído</span>
                                             )}
                                         </div>
                                     </td>
                                     <td className="p-8">
+                                        {client.plan ? (
+                                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 max-w-[200px]">
+                                                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Usuários:</p>
+                                                <p className="text-[10px] font-black text-primary">{client.plan.max_users}</p>
+                                                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Análises:</p>
+                                                <p className="text-[10px] font-black text-primary">{client.plan.max_companies}</p>
+                                            </div>
+                                        ) : (
+                                            <span className="text-primary/10">—</span>
+                                        )}
+                                    </td>
+                                    <td className="p-8">
                                         <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${client.status === 'blocked'
-                                                ? 'bg-rose-50 text-rose-500 border border-rose-100 shadow-inner'
-                                                : client.status === 'pending'
-                                                    ? 'bg-amber-50 text-amber-500 border border-amber-100 shadow-inner'
-                                                    : 'bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-inner'
+                                            ? 'bg-rose-50 text-rose-500 border border-rose-100 shadow-inner'
+                                            : client.status === 'pending'
+                                                ? 'bg-amber-50 text-amber-500 border border-amber-100 shadow-inner'
+                                                : 'bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-inner'
                                             }`}>
                                             <div className={`w-2 h-2 rounded-full animate-pulse ${client.status === 'blocked' ? 'bg-rose-500' :
-                                                    client.status === 'pending' ? 'bg-amber-500' : 'bg-emerald-500'
+                                                client.status === 'pending' ? 'bg-amber-500' : 'bg-emerald-500'
                                                 }`} />
                                             {client.status === 'blocked' ? 'Suspenso' : client.status === 'pending' ? 'Aguardando' : 'Ativo'}
                                         </span>
