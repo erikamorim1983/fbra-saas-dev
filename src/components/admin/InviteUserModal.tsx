@@ -16,7 +16,6 @@ export default function InviteUserModal({ onClose, onSuccess }: InviteUserModalP
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -24,7 +23,14 @@ export default function InviteUserModal({ onClose, onSuccess }: InviteUserModalP
         setSuccess(false);
 
         try {
-            await inviteUser(email, fullName, role);
+            const result = await inviteUser(email, fullName, role);
+
+            if (result && 'error' in result) {
+                setError(result.error);
+                setLoading(false);
+                return;
+            }
+
             setSuccess(true);
             setTimeout(() => {
                 onSuccess();
@@ -34,7 +40,6 @@ export default function InviteUserModal({ onClose, onSuccess }: InviteUserModalP
             setLoading(false);
         }
     };
-
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
             <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm" onClick={onClose} />

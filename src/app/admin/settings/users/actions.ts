@@ -49,7 +49,7 @@ export async function inviteUser(email: string, fullName: string, role: string) 
 
         const { data: authData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
             data: { full_name: fullName },
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback`
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://fbra-saas-dev-cgjf.vercel.app'}/auth/callback?next=/auth/set-password`
         });
 
         if (inviteError) return { error: inviteError.message };
